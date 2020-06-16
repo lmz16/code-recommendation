@@ -1,0 +1,150 @@
+Parser.py -- 语法分析器当前在BNF文法下的语法规则:
+
+/*整个代码文件的总节点program, 对应Parser.process_0()*/
+program: /*way 0, 创建一个新的program节点, 跳转到program_way1*/
+    |program preprocgroup /*way 1, 遇到'#'则跳转到preprocgroup_way0, preprocgroup返回的新节点加入子节点*/
+    |program function_implementation_or_variable_declaration_or_anything_else /*way 1, 其他情况则跳转到f_i_o_v_d_o_a_e_way0, f_i_o_v_d_o_a_e返回的新节点加入子节点*/
+    ;
+
+/*预编译指令组preprocgroup, 对应Parser.process_1()*/
+preprocgroup: /*way 0, 创建一个新的preprocgroup节点, 跳转到preprocgroup_way1*/
+    |preprocgroup preproc /*way 1, 遇到'#'则跳转到preproc_way0, preproc返回的新节点加入子节点, 跳转到preprocgroup_way1, 否则结束该条语法*/
+    ;
+
+/*预编译指令preproc, 对应Parser.process_2()*/
+preproc: /*way 0, 创建一个新的preproc节点*/
+    |preproc token /*way 1, 逐个读入token并加入子节点, 遇到换行符则结束该条语法*/
+    ;
+
+/*函数的实现或变量声明或其他function_implementation_or_variable_declaration_or_anything_else, 对应Parser.process_3()*/
+function_implementation_or_variable_declaration_or_anything_else: /*way 0, 创建一个新的f_i_o_v_d_o_a_e节点*/
+    |function_implementation_or_variable_declaration_or_anything_else token /*way 1, 逐个读入token并加入子节点*/
+    |function_implementation_or_variable_declaration_or_anything_else compst /*way 1, 遇到'{'则跳转到compst*/
+    ;
+
+/*代码块compst, 对应Parser.process_4()*/
+compst: /*way 0, 创建一个新的compst节点*/
+    |compst statement /*way 1, 遇到'}'则结束该条语法, 否则跳转到statement, statement返回的新节点加入子节点*/
+    |compst { compst } /*way 1*/
+    |compst ifstmts /*way 1, 遇到keyword_if则跳转到ifstmts, ifstmts返回的新节点加入子节点*/ 
+    |compst forstmts /*way 1, /
+    |compst whilestmts /*way 1, /
+    |compst jumplabel /*way 1, /
+    |compst preproc /*way 1*/
+    |compst switchstmts /*way 1*/
+    ;
+
+/*语句statement, 对应Parser.process_5()*/
+statement: /*way 0, 创建一个新的statement节点*/
+    |statement token /*way 1, 逐个读入token并加入子节点, 遇到';'则结束该条语法*/
+    |statement compst /*way 1, 遇到'{'则跳转到compst*/
+    ;
+
+/*if语句体ifstmts, 对应Parser.process_6()*/
+ifstmts: /*way 0, 创建一个新的ifstmts节点, 跳转到ifstmts_way1*/
+    |ifstmts ifexp /*way 1, 遇到'if'则跳转到ifexp, ifexp返回的节点加入子节点, 跳转到ifstmts_way2*/
+    |ifstmts elseifexp /*way 1, 遇到'else' + 'if'则跳转到elseifexp, elseifexp返回的节点加入子节点, 跳转到ifstmts_way2*/
+    |ifstmts elseexp /*way 1, 遇到'else'则跳转到elseexp, elseexp返回的节点加入子节点, 结束该条语法*/
+    |ifstmts /*way 1, 结束该条语法*/
+    |ifstmts compst /*way 2, 遇到'{'则跳转到compst, compst返回的节点加入子节点, 跳转到ifstmts_way3*/
+    |ifstmts statement /*way 2, 没有遇到'{'则跳转statement, statement返回的节点加入子节点, 跳转到ifstmts_way3*/
+    ;
+
+/*if表达式ifexp, 对应Parser.process_7()*/
+ifexp: /*way 0, 创建一个新的ifexp节点, 跳转到ifexp_way1*/
+    |ifexp exp /*way 1, 如果遇到'('则跳转到exp, exp返回的节点加入子节点, 结束该条语法*/
+    ;
+
+/*elseif表达式elseifexp, 对应Parser.process_8()*/
+elseifexp: /*way 0, 创建一个新的elseif节点, 跳转到elseif_way1*/
+    |elseifexp exp /*way 1, 如果遇到'('则跳转到exp, exp返回的节点加入子节点, 结束该条语法*/
+    ;
+
+/*else表达式elseexp, 对应Parser.process_9()*/
+elseexp: /*way 0, 创建一个新的elseif节点, 跳转到elseif_way1*/
+    |elseexp exp /*way 1, 如果遇到'('则跳转到exp, exp返回的节点加入子节点, 结束该条语法*/
+    ;
+
+/*表达式exp, 对应Parser.process_10()*/
+exp: /*way 0, 创建一个新的exp节点, 跳转到exp_way1*/
+    |exp token /*way 1, 循环读入下一个字符, 根据当前字符做不同处理, 遇到'{'、'}'与';'则跳出循环, 结束该条语法*/
+    ;
+
+/*for循环语句体forstmts, 对应Parser.process_11()*/
+forstmts: /*way 0, 创建一个新的forstmts节点, 跳转到forstmts_way1*/
+    |forstmts forexp /*way 1, 跳转到forexp, forexp返回的节点加入子节点, 跳转到forstmts_way2*/\
+    |forstmts compst /*way 2, 遇到'{'则跳转到compst, compst返回的节点加入子节点, 结束该条语法*/
+    |forstmts statement /*way 2, 没有遇到'{'则跳转statement, statement返回的节点加入子节点, 结束该条语法*/
+    ;
+
+/*for循环语句条件forexp, 对应Parser.process_12()*/
+forexp: /*way 0, 创建一个新的forexp节点, 跳转到forexp_way1*/
+    |forexp token /*way 1, 循环读入下一个字符, 根据当前字符做不同处理, 遇到'{'、'}'则跳出循环, 结束该条语法*/
+    ;
+
+/*while循环语句体whilestmts, 对应Parser.process_13()*/
+whilestmts: /*way 0, 创建一个新的whilestmts节点, 跳转到whilestmts_way1*/
+    |whilestmts whileexp /*way 1, 跳转到whileexp, whileexp返回的节点加入子节点, 跳转到whilestmts_way2*/
+    |whilestmts compst /*way 2, 遇到'{'则跳转到compst, compst返回的节点加入子节点, 结束该条语法*/
+    |whilestmts statement /*way 2, 没有遇到'{'则跳转statement, statement返回的节点加入子节点, 结束该条语法*/
+    ;
+
+/*while循环语句条件whileexp, 对应Parser.process_14()*/
+whileexp: /*way 0, 创建一个新的whileexp节点, 跳转到whileexp_way1*/
+    |whileexp token /*way 1, 循环读入下一个字符, 根据当前字符做不同处理, 遇到';'、'{'、'}'则跳出循环, 结束该条语法*/
+    ;
+
+/*跳转标记jumplabel, 对应Parser.process_15()*/
+jumplabel: /*way 0, 创建一个新的jumplabel节点, 跳转到jumplabel_way1*/
+    |jumplabel token /*way 1, 循环读入下一个字符, 根据当前字符做不同处理, 遇到':'则跳出循环, 结束该条语法*/
+    ;
+
+/*switch语句体switchstmts, 对应Parser.process_16()*/
+switchstmts: /*way 0, 创建一个新的switchstmts节点, 跳转到switchstmts_way1*/
+    |switchstmts switchexp /*way 1*/
+    |switchstmts switchcompst /*way 2*/
+    ;
+
+/*switch语句条件switchexp, 对应Parser.process_17()*/
+switchexp: /*way 0, 创建一个新的switchexp节点, 跳转到switchexp_way1*/
+    |switchexp token /*way 1, 循环读入下一个字符, 根据当前字符做不同处理, 遇到';'、'{'、'}'则跳出循环, 结束该条语法*/
+    ;
+
+/*switch语句主体部分switchcompst, 对应Parser.process_18()*/
+switchcompst: /*way 0, 创建一个新的switchcompst节点, 跳转到switchcompst_way1*/
+    |switchcompst switchcase /*way 1*/
+    |switchcompst jumplabel /*way 1*/
+    ;
+
+/*switch语句项switchcase, 对应Parser.process_19()*/
+switchcase: /*way 0, 创建一个新的switchcase节点, 跳转到switchcase_way1*/
+    |switchcase switchcaseexp /*way 1*/
+    |switchcase ifstmts /*way 2, 遇到keyword_if则跳转到ifstmts, ifstmts返回的新节点加入子节点, 跳转到switchcase_way1*/ 
+    |switchcase forstmts /*way 2, /
+    |switchcase whilestmts /*way 2, /
+    |switchcase jumplabel /*way 2, /
+    |switchcase switchstmts /*way 2, */
+    |switchcase preproc /*way 2, */
+    |switchcase statement /*way 2, /
+    ;
+
+/*switch语句项条件表达式switchcaseexp, 对应Parser.process_20()*/
+switchcaseexp: /*way 0, 创建一个新的switchcaseexp节点, 跳转到switchcaseexp_way1*/
+    |switchcaseexp token /*way 1, 循环读入下一个字符, 根据当前字符做不同处理, 遇到':'则跳出循环, 结束该条语法*/
+    ;
+
+
+写规则的时候有几个需要注意和检查的点:
+1)无论在何处, 每次从读入的token建立token节点后都要移动一下token指针(parser.pointer), 这是为了保证分析能不断进行, 否则会停在一个地方死循环
+2)每条规则都是一个状态机, 因此一定要保证状态转移的合理性, 即执行完这个规则的函数之后, 要么函数返回到上一级, 要么进入下一个状态机中, 其中一定要有返回到上一级的机制, 要不然栈就爆了, 比如statement退出的条件是遇到';', compst是遇到'}'
+3)在状态转移的过程中, 还加入了语法树的构建过程, 为了使得语法树顺利构建, 每个规则的状态机函数都有一个value参数并且在任何条件下都会返回一个值, 状态机函数的value参数代表该条规则的父节点编号, 返回值代表该条规则本身的节点编号
+
+Lexer.py -- 词法分析器:
+实现方式是先用pygments模块提取token然后做一点修改
+修改后的token用二元组表示, 二元组第0个值代表节点类型, 第1个值代表节点的字符串, 但一些类型的token的字符串是None, 这是因为它们的类型足够表示它们的内容, 例如';'、'{'、'+'、'static'
+注意语法分析时并不直接使用词法分析器的结果(output), 而要和output_map结合使用, output_map给出的下标中排除了注释和占位符这些无效token, 无效token语法分析时用不到, 之前我没有去掉它们导致语法分析中要加入很多冗余的部分
+
+Ast.py -- 抽象代码树:
+AstNode结构很简单, 只有三个数据成员, 分别是节点类型ntype, 内容下标content与子节点列表subNode
+所有的AstNode类型在Ast.type_name中给出, 注意不要修改已有部分, 但可以在后面追加
+
