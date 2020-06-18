@@ -19,7 +19,7 @@ def initialize_vectors(inpfile, outfile=None, dim=16, method='normal', mean=0, s
     np.save(outfile, nonterminal_vectors)
 
 
-def update_vectors(relationfile, vectorfile, lr=0.01, epochs=15, method='normal', mean=0, std=0.1):
+def update_vectors(relationfile, vectorfile, lr=0.01, epochs=5, method='normal', mean=0, std=0.1):
     nonterminal_vectors = np.load(vectorfile)
     dim = nonterminal_vectors.shape[1] - 1
     with open(relationfile, 'rb') as f:
@@ -28,8 +28,10 @@ def update_vectors(relationfile, vectorfile, lr=0.01, epochs=15, method='normal'
         relation_vectors = np.random.random_sample((len(relations), dim))
     elif method == 'normal':
         relation_vectors = np.random.normal(mean, std, (len(relations), dim))
-    for _ in epochs:
+    for epoch in range(epochs):
+        print(epoch)
         for i in range(len(relations)):
+            print(i)
             for j in range(nonterminal_vectors.shape[0]):
                 rating = 1 if int(nonterminal_vectors[j][0]) in relations[i] else 0
                 error = rating - np.dot(relation_vectors[i, :], nonterminal_vectors[j, 1:])
@@ -42,4 +44,4 @@ def update_vectors(relationfile, vectorfile, lr=0.01, epochs=15, method='normal'
 
 if __name__ == '__main__':
     initialize_vectors('inline.pkl', 'inline.npy')
-    # update_vectors('inline_r.pkl', 'inline.npy')
+    update_vectors('inline_r.pkl', 'inline.npy')
